@@ -172,6 +172,9 @@ export default class RecipeGrabber extends Plugin {
 	private addRecipeToMarkdown = async (url: string): Promise<void> => {
 		// Add a handlebar function to split comma separated tags into the obsidian expected array/list
 		handlebars.registerHelper("splitTags", function (tags) {
+			if (!tags || typeof tags != "string") {
+				return "";
+			}
 			var tagsArray = tags.split(",");
 			var tagString = "";
 			for (const tag of tagsArray) {
@@ -180,25 +183,44 @@ export default class RecipeGrabber extends Plugin {
 			return tagString;
 		});
 
-		// Prettify time
-		handlebars.registerHelper("prettyTime", function (thetime) {
-			if (thetime) {
-				return thetime
-					.trim()
-					.replace("PT", "")
-					.replace("H", "h ")
-					.replace("M", "m ")
-					.replace("S", "s ");
+		handlebars.registerHelper("magicTime", function (arg1, arg2) {
+			if (typeof arg1 === "undefined") {
+				// catch empty
+				return "";
 			}
-			return "";
-		});
-
-		// Formattable timestamp when saved
-		handlebars.registerHelper("savedAt", function (savedFormat) {
-			if (!savedFormat || typeof savedFormat != "string") {
+			if (arguments.length == 1) {
+				// magicDate
 				return dateFormat(new Date(), "yyyy-mm-dd HH:MM");
+			} else if (arguments.length == 2) {
+				// magicDate "dd-mm-yyyy HH:MM"
+				if (new Date(arg1) == "Invalid Date") {
+					if (arg1.trim().startsWith("PT")) {
+						return arg1
+							.trim()
+							.replace("PT", "")
+							.replace("H", "h ")
+							.replace("M", "m ")
+							.replace("S", "s ");
+					}
+					try {
+						let returnDate = dateFormat(new Date(), arg1);
+						return returnDate;
+					} catch (error) {
+						return "";
+					}
+				}
+				return dateFormat(new Date(arg1), "yyyy-mm-dd HH:MM");
+				// magicDate datePublished
+			} else if (arguments.length == 3) {
+				// magicDate datePublished "dd-mm-yyyy HH:MM"
+				if (new Date(arg1) == "Invalid Date") {
+					// Invalid input
+					return "Invalid formatting";
+				}
+				return dateFormat(new Date(arg1), arg2);
+			} else {
+				return "error";
 			}
-			return dateFormat(new Date(), savedFormat);
 		});
 
 		const markdown = handlebars.compile(this.settings.recipeTemplate);
