@@ -185,16 +185,17 @@ export default class RecipeGrabber extends Plugin {
 
 		handlebars.registerHelper("magicTime", function (arg1, arg2) {
 			if (typeof arg1 === "undefined") {
-				// catch empty
+				// catch undefined / empty
 				return "";
 			}
+			// Handlebars appends an ubject to the arguments
 			if (arguments.length == 1) {
-				// magicDate
+				// magicTime
 				return dateFormat(new Date(), "yyyy-mm-dd HH:MM");
 			} else if (arguments.length == 2) {
-				// magicDate "dd-mm-yyyy HH:MM"
 				if (new Date(arg1) == "Invalid Date") {
 					if (arg1.trim().startsWith("PT")) {
+						// magicTime PT1H50M
 						return arg1
 							.trim()
 							.replace("PT", "")
@@ -203,6 +204,7 @@ export default class RecipeGrabber extends Plugin {
 							.replace("S", "s ");
 					}
 					try {
+						// magicTime "dd-mm-yyyy HH:MM"
 						let returnDate = dateFormat(new Date(), arg1);
 						return returnDate;
 					} catch (error) {
@@ -210,16 +212,17 @@ export default class RecipeGrabber extends Plugin {
 					}
 				}
 				return dateFormat(new Date(arg1), "yyyy-mm-dd HH:MM");
-				// magicDate datePublished
+				// magicTime datePublished
 			} else if (arguments.length == 3) {
-				// magicDate datePublished "dd-mm-yyyy HH:MM"
+				// magicTime datePublished "dd-mm-yyyy HH:MM"
 				if (new Date(arg1) == "Invalid Date") {
 					// Invalid input
-					return "Invalid formatting";
+					return "Error in template or source";
 				}
 				return dateFormat(new Date(arg1), arg2);
 			} else {
-				return "error";
+				// Unexpected amount of arguments
+				return "Error in template";
 			}
 		});
 
